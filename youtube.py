@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
-# very ezzz code
+# app.py
+from flask import Flask, request, jsonify
 from local_lib.pytube.__main__ import YouTube as huggywuggywilleatyoucuzyouverytasty
 
 class Developer:
     def __init__(self):
-        self.name: str="Nikita"
-        self.nickname: str="3verlaster"
-        self.github_link: str="https://github.com/3verlaster"
+        self.name: str = "Nikita"
+        self.nickname: str = "3verlaster"
+        self.github_link: str = "https://github.com/3verlaster"
 
 def download_video_max_res(video_url):
     try:
@@ -22,16 +22,29 @@ def download_video_max_res(video_url):
     except Exception as e:
         return "An error occurred: {}".format(str(e))
 
+app = Flask(__name__)
 
+@app.route('/')
+def index():
+    developer = Developer()
+    return jsonify({
+        "developer": developer.name,
+        "nickname": developer.nickname,
+        "github_link": developer.github_link
+    })
+
+@app.route('/download', methods=['POST'])
+def download():
+    data = request.json
+    video_url = data.get('video_url')
+    if not video_url:
+        return jsonify({"error": "No video URL provided"}), 400
+    
+    if not video_url.startswith("https://youtube.com/shorts/"):
+        return jsonify({"error": "This is not a YouTube shorts link!"}), 400
+
+    response = download_video_max_res(video_url)
+    return jsonify({"message": response})
 
 if __name__ == "__main__":
-    developer = Developer()
-    print()
-    print("[GITHUB] Developer: " + developer.github_link)
-    print()
-    video_url = input("Type video URL here: ")
-    if video_url.startswith("https://youtube.com/shorts/"): #only shorts, bro...
-        response = download_video_max_res(video_url)
-        print(response)
-    else:
-        print("This is not a youtube shorts link!")
+    app.run(debug=True)
